@@ -5,4 +5,7 @@ matplotlib
 seaborn
 jupyter
 joblib
-flask
+fastapi
+uvicorn
+pydantic
+jinja2
