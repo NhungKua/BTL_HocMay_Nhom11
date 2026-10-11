@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Palmer Penguins - Giới thiệu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">🐧 Nhóm 11 - ML Project 04</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/">Giới thiệu</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/predict">Dự đoán</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Model Card</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <div class="p-5 mb-4 bg-white rounded-3 shadow-sm">
+            <h1 class="display-5 fw-bold">Dự đoán Loài Chim Cánh Cụt (K-NN)</h1>
+            <p class="col-md-10 fs-4 mt-3">Chào mừng đến với trang giáo dục sinh thái. Hệ thống này sử dụng thuật toán K-Nearest Neighbors để gợi ý 1 trong 3 loài chim cánh cụt (Adelie, Gentoo, Chinstrap) dựa trên 4 chỉ số hình thái học cơ thể.</p>
+            <hr>
+            <h4>Phạm vi của hệ thống:</h4>
+            <ul>
+                <li>Dữ liệu huấn luyện gồm 342 cá thể chim thu thập tại trạm Palmer LTER, Nam Cực (2007-2009).</li>
+                <li>Dự đoán chỉ có độ tin cậy cao nếu số đo nhập vào nằm trong miền phân bố sinh lý tự nhiên của dữ liệu học.</li>
+                <li>Mọi ngoại lệ vượt ngưỡng (ví dụ khối lượng < 2000g hoặc > 7000g) sẽ bị từ chối để đảm bảo tính chặt chẽ.</li>
+            </ul>
+            <a href="/predict" class="btn btn-primary btn-lg mt-3">Bắt đầu Dự đoán</a>
+        </div>
+    </div>
+</body>
+</html>

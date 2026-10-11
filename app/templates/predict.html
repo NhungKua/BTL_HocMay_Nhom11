@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Palmer Penguins - Dự đoán</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">🐧 Nhóm 11 - ML Project 04</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Giới thiệu</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/predict">Dự đoán</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/dashboard">Model Card</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">Nhập Thông Số</div>
+                    <div class="card-body">
+                        <form id="predictForm">
+                            <div class="mb-3">
+                                <label class="form-label">Chiều dài mỏ (mm)</label>
+                                <input type="number" step="0.1" min="20" max="70" class="form-control" id="bill_length" placeholder="Miền: 20 - 70" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Độ dày mỏ (mm)</label>
+                                <input type="number" step="0.1" min="10" max="25" class="form-control" id="bill_depth" placeholder="Miền: 10 - 25" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Chiều dài vây (mm)</label>
+                                <input type="number" step="0.1" min="150" max="250" class="form-control" id="flipper_length" placeholder="Miền: 150 - 250" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Khối lượng (g)</label>
+                                <input type="number" step="1" min="2000" max="7000" class="form-control" id="body_mass" placeholder="Miền: 2000 - 7000" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">Dự đoán Loài</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div id="resultArea" class="d-none">
+    <div class="alert alert-info shadow-sm">
+        <h4 class="alert-heading">Kết quả dự đoán: <strong id="speciesResult" class="text-uppercase"></strong></h4>
+        <p class="mb-2">Độ đồng thuận (Top 5 láng giềng): <strong id="confidenceResult"></strong>%</p>
+        <hr>
+        <p class="mb-0"><strong>Lý do:</strong> <span id="reasoningResult"></span></p>
+    </div>
+    <div class="card shadow-sm mt-3">
+        <div class="card-header bg-secondary text-white">5 Láng giềng gần nhất (Để đối chiếu và giải thích)</div>
+        <div class="card-body p-0">
+            <!-- (Giữ nguyên thẻ table cũ ở đây) -->
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Hạng</th>
+                        <th>Loài (Nhãn thật)</th>
+                        <th>Khoảng cách (Z-score)</th>
+                        <th>Dài mỏ</th>
+                        <th>Dày mỏ</th>
+                        <th>Dài vây</th>
+                        <th>Khối lượng</th>
+                    </tr>
+                </thead>
+                <tbody id="neighborsTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+                <div id="errorArea" class="alert alert-danger d-none mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorArea = document.getElementById('errorArea');
+            const resultArea = document.getElementById('resultArea');
+            errorArea.classList.add('d-none');
+            resultArea.classList.add('d-none');
+
+            const payload = {
+                bill_length_mm: parseFloat(document.getElementById('bill_length').value),
+                bill_depth_mm: parseFloat(document.getElementById('bill_depth').value),
+                flipper_length_mm: parseFloat(document.getElementById('flipper_length').value),
+                body_mass_g: parseFloat(document.getElementById('body_mass').value)
+            };
+
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    let errMsg = "Lỗi xác thực dữ liệu: ";
+                    if (data.detail && Array.isArray(data.detail)) {
+                        errMsg += data.detail.map(err => err.msg).join(" | ");
+                    } else {
+                        errMsg += JSON.stringify(data.detail);
+                    }
+                    errorArea.textContent = errMsg;
+                    errorArea.classList.remove('d-none');
+                    return;
+                }
+
+                document.getElementById('speciesResult').textContent = data.predicted_species;
+                document.getElementById('confidenceResult').textContent = data.confidence_percent;
+                document.getElementById('reasoningResult').textContent = data.reasoning;
+                
+                const tbody = document.getElementById('neighborsTable');
+                tbody.innerHTML = '';
+                data.neighbors.forEach(n => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${n.rank}</td>
+                            <td class="fw-bold text-primary">${n.species}</td>
+                            <td>${n.distance.toFixed(4)}</td>
+                            <td>${n.bill_length_mm}</td>
+                            <td>${n.bill_depth_mm}</td>
+                            <td>${n.flipper_length_mm}</td>
+                            <td>${n.body_mass_g}</td>
+                        </tr>
+                    `;
+                });
+                resultArea.classList.remove('d-none');
+            } catch (error) {
+                errorArea.textContent = "Lỗi kết nối đến máy chủ.";
+                errorArea.classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>
